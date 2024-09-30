@@ -57,5 +57,4 @@ function generateZombie(id, name, dna) {
   return zombieDetails
 }
 ```
-Chúng ta sẽ học chi tiết hơn về cách triển khai và sử dụng Web3.js trong bài học sau.
 
