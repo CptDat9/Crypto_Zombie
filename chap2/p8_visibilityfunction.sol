@@ -1,4 +1,4 @@
-/
+/*
 Chương 9: Tìm hiểu thêm về Tầm nhìn (Visibility) của Hàm
 Code trong bài học trước có một lỗi!
 
