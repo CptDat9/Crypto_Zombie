@@ -41,5 +41,6 @@ contract ZombieHelper is ZombieFeeding {
   {
     require(zombies[_zombieId].level >= _level);
     _;
+// Lưu ý phải có dòng _; riêng ở dưới không là cook nhé
   }
 }
