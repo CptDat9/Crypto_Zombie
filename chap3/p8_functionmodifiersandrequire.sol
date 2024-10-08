@@ -1,4 +1,4 @@
-/
+/*
 Chương 8: Tìm hiểu thêm về Function Modifiers
 
 Tuyệt vời! Zombie của chúng ta hiện đã có một bộ đếm thời gian chờ hoạt động.
