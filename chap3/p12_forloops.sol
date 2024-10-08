@@ -1,4 +1,4 @@
-/
+/*
 Chương 12: Vòng lặp For
 
 Trong chương trước, chúng ta đã đề cập rằng đôi khi bạn sẽ muốn sử dụng vòng lặp for để tạo nội dung cho một mảng trong hàm thay vì đơn giản chỉ lưu mảng đó vào bộ nhớ.
@@ -13,7 +13,6 @@ mapping (address => uint[]) public ownerToZombies
 Sau đó, mỗi khi tạo ra một zombie mới, chúng ta chỉ cần sử dụng ownerToZombies[owner].push(zombieId) để thêm zombie đó vào mảng zombie của chủ sở hữu. Và hàm getZombiesByOwner sẽ rất đơn giản:
 
 solidity
-Sao chép mã
 function getZombiesByOwner(address _owner) external view returns (uint[] memory) {
   return ownerToZombies[_owner];
 }
