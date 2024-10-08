@@ -12,6 +12,8 @@ Các modifiers này có thể được kết hợp với nhau trong một địn
 
 solidity
 function test() external view onlyOwner anotherModifier { /* ... */ }
+*/
+/*
 Modifier payable
 Bây giờ chúng ta sẽ giới thiệu thêm một bộ sửa đổi nữa: payable.
 
