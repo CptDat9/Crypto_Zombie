@@ -1,4 +1,4 @@
-@dev Lưu ý đã sữ dụng ownerOf() - hàm modifiers thì không cần kiểm tra require(msg.sender...) nữa vì nó đã check quyền cho từ hàm ownerOf rồi nên hàm còn lại msg.sender sẽ bị thừa
+/** @dev Lưu ý đã sữ dụng ownerOf() - hàm modifiers thì không cần kiểm tra require(msg.sender...) nữa vì nó đã check quyền cho từ hàm ownerOf rồi nên hàm còn lại msg.sender sẽ bị thừa */
 pragma solidity >=0.5.0 <0.6.0;
 
 import "./zombiefeeding.sol";
