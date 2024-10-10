@@ -37,6 +37,7 @@ import "./zombieattack.sol";
 // Import file here
 import "./erc721.sol";
 
-contract ZombieOwnership is ZombieAttack, ERC721 //Đa kế thừa dùng thêm dấu "," thôi. {
+contract ZombieOwnership is ZombieAttack, ERC721 
+//Đa kế thừa dùng thêm dấu "," thôi. {
 
 }
