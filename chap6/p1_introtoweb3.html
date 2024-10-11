@@ -1,0 +1,46 @@
+/*
+Chương 1: Giới thiệu về Web3.js
+
+Sau khi hoàn thành Bài học 5, ứng dụng phi tập trung (DApp) về zombie của chúng ta đã hoàn chỉnh. Bây giờ, chúng ta sẽ tạo một trang web cơ bản để người dùng tương tác với DApp này.
+
+Để thực hiện điều này, chúng ta sẽ sử dụng thư viện JavaScript từ Ethereum Foundation gọi là Web3.js.
+
+Web3.js là gì?
+
+Hãy nhớ rằng mạng Ethereum bao gồm các node, và mỗi node chứa một bản sao của blockchain. Khi bạn muốn gọi một hàm trong hợp đồng thông minh, bạn cần gửi yêu cầu đến một trong những node đó và cung cấp:
+
+Địa chỉ của hợp đồng thông minh
+Hàm mà bạn muốn gọi, và
+Các biến bạn muốn truyền vào hàm đó.
+Các node của Ethereum chỉ giao tiếp bằng một ngôn ngữ gọi là JSON-RPC, vốn không dễ đọc đối với con người. Một yêu cầu để gọi một hàm trong hợp đồng có thể trông như thế này:
+
+json
+{"jsonrpc":"2.0","method":"eth_sendTransaction","params":[{"from":"0xb60e8dd61c5d32be8058bb8eb970870f07233155","to":"0xd46e8dd67c5d32be8058bb8eb970870f07244567","gas":"0x76c0","gasPrice":"0x9184e72a000","value":"0x9184e72a","data":"0xd46e8dd67c5d32be8d46e8dd67c5d32be8058bb8eb970870f072445675058bb8eb970870f072445675"}],"id":1}
+May mắn thay, Web3.js ẩn những truy vấn phức tạp này, vì vậy bạn chỉ cần tương tác với một giao diện JavaScript đơn giản và dễ đọc.
+
+Thay vì phải tạo ra truy vấn trên, việc gọi một hàm trong mã của bạn sẽ trông như thế này:
+
+javascript
+CryptoZombies.methods.createRandomZombie("Vitalik Nakamoto 🤔")
+  .send({ from: "0xb60e8dd61c5d32be8058bb8eb970870f07233155", gas: "3000000" })
+Chúng ta sẽ giải thích chi tiết cú pháp này trong những chương tiếp theo, nhưng trước tiên, hãy bắt đầu cài đặt Web3.js cho dự án của bạn.
+
+Bắt đầu
+
+Tùy thuộc vào quy trình phát triển của bạn, bạn có thể thêm Web3.js vào dự án bằng các công cụ quản lý gói phổ biến:
+
+bash
+// Sử dụng NPM
+npm install web3
+
+// Sử dụng Yarn
+yarn add web3
+
+// Sử dụng Bower
+bower install web3
+Hoặc bạn có thể tải xuống tệp web3.min.js đã được nén từ GitHub và đưa vào dự án của mình:
+
+html
+<script language="javascript" type="text/javascript" src="web3.min.js"></script>
+Vì chúng ta không muốn đưa ra quá nhiều giả định về môi trường phát triển của bạn và công cụ quản lý gói nào bạn đang sử dụng, trong hướng dẫn này chúng ta sẽ chỉ đơn giản thêm Web3 vào dự án của mình bằng cách sử dụng thẻ <script> như trên.
+*/
