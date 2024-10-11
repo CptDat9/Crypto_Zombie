@@ -1,3 +1,4 @@
+/*
 Chapter 10: SafeMath Part 2
 Let's take a look at the code behind SafeMath:
 
@@ -62,6 +63,7 @@ We would do:
 
 myUint = myUint.add(1);
 -------------------------------------------------------------------
+*/
 pragma solidity >=0.5.0 <0.6.0;
 
 import "./zombieattack.sol";
