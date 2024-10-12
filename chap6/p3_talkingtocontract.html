@@ -1,0 +1,69 @@
+<!--
+Chương 3: Giao tiếp với Hợp đồng
+
+Bây giờ chúng ta đã khởi tạo Web3.js với Web3 provider của MetaMask, hãy thiết lập nó để giao tiếp với smart contract của chúng ta.
+
+Web3.js sẽ cần 2 thứ để giao tiếp với hợp đồng của bạn: địa chỉ của hợp đồng và ABI của nó.
+
+Địa chỉ Hợp đồng
+Sau khi bạn viết xong smart contract của mình, bạn sẽ biên dịch và triển khai nó lên Ethereum. Chúng ta sẽ học về triển khai trong bài học tiếp theo, nhưng vì đó là một quá trình khá khác biệt so với việc viết mã, chúng tôi quyết định sẽ học Web3.js trước.
+
+Sau khi bạn triển khai hợp đồng của mình, nó sẽ có một địa chỉ cố định trên Ethereum và tồn tại mãi mãi. Nếu bạn nhớ từ Bài học 2, địa chỉ của hợp đồng CryptoKitties trên mạng chính Ethereum là 0x06012c8cf97BEaD5deAe237070F9587f8E7A266d.
+
+Bạn sẽ cần sao chép địa chỉ này sau khi triển khai để có thể giao tiếp với smart contract của mình.
+
+ABI của Hợp đồng
+Thứ khác mà Web3.js cần để giao tiếp với hợp đồng của bạn là ABI.
+
+ABI là viết tắt của Application Binary Interface (Giao diện Nhị phân Ứng dụng). Nói đơn giản, nó là một đại diện của các phương thức của hợp đồng của bạn ở định dạng JSON, cho phép Web3.js hiểu cách gọi các hàm trong hợp đồng.
+
+Khi bạn biên dịch hợp đồng để triển khai lên Ethereum (chúng ta sẽ học về điều này trong Bài học 7), trình biên dịch Solidity sẽ cung cấp cho bạn ABI, vì vậy bạn sẽ cần sao chép và lưu ABI này cùng với địa chỉ hợp đồng.
+
+Vì chúng ta chưa học về triển khai, nên trong bài học này, chúng tôi đã biên dịch ABI cho bạn và lưu nó trong một tệp có tên cryptozombies_abi.js, được lưu trữ trong biến gọi là cryptoZombiesABI.
+
+Nếu chúng ta bao gồm tệp cryptozombies_abi.js trong dự án của mình, chúng ta có thể truy cập ABI của CryptoZombies bằng cách sử dụng biến đó.
+
+Khởi tạo một Hợp đồng Web3.js
+Khi bạn đã có địa chỉ và ABI của hợp đồng, bạn có thể khởi tạo nó trong Web3 như sau:
+
+javascript
+// Khởi tạo myContract
+var myContract = new web3js.eth.Contract(myABI, myContractAddress);
+--->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>CryptoZombies front-end</title>
+    <script language="javascript" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script language="javascript" type="text/javascript" src="web3.min.js"></script>
+    <script language="javascript" type="text/javascript" src="cryptozombies_abi.js"></script>
+  </head>
+  <body>
+
+    <script>
+    var cryptoZombies;
+
+    function startApp() {
+        var cryptoZombiesAddress = "YOUR_CONTRACT_ADDRESS";
+        cryptoZombies = new web3js.eth.Contract(cryptoZombiesABI, cryptoZombiesAddress);
+      }
+
+      window.addEventListener('load', function() {
+
+       
+        if (typeof web3 !== 'undefined') {
+         
+          web3js = new Web3(web3.currentProvider);
+        } else {
+         
+         
+        }
+
+       
+        startApp()
+
+      })
+    </script>
+  </body>
+</html>
