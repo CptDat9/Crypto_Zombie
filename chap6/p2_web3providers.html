@@ -1,0 +1,91 @@
+<!--
+Chương 2: Các nhà cung cấp Web3
+
+Tuyệt vời! Giờ đây khi chúng ta đã có Web3.js trong dự án, hãy bắt đầu khởi tạo và giao tiếp với blockchain.
+
+Điều đầu tiên chúng ta cần là một Web3 Provider.
+
+Nhớ rằng, Ethereum bao gồm các nút (nodes) chia sẻ cùng một bản sao dữ liệu. Việc thiết lập Web3 Provider trong Web3.js giúp mã của chúng ta biết phải giao tiếp với nút nào để xử lý các thao tác đọc và ghi dữ liệu. Nó tương tự như việc thiết lập URL của máy chủ web từ xa để gọi API trong một ứng dụng web truyền thống.
+
+Bạn có thể tự thiết lập một nút Ethereum của riêng mình làm provider. Tuy nhiên, có một dịch vụ của bên thứ ba giúp bạn dễ dàng hơn, không cần duy trì nút Ethereum riêng mà vẫn có thể cung cấp DApp cho người dùng — Infura.
+
+Infura
+Infura là một dịch vụ duy trì một tập hợp các nút Ethereum với một lớp bộ nhớ đệm (caching) để xử lý đọc dữ liệu nhanh chóng, và bạn có thể truy cập miễn phí qua API của họ. Sử dụng Infura làm provider, bạn có thể gửi và nhận các thông điệp đến/từ blockchain Ethereum một cách đáng tin cậy mà không cần thiết lập và duy trì nút riêng của mình.
+
+Bạn có thể thiết lập Web3 để sử dụng Infura làm web3 provider như sau:
+
+js
+var web3 = new Web3(new Web3.providers.WebsocketProvider("wss://mainnet.infura.io/ws"));
+Tuy nhiên, vì DApp của chúng ta sẽ được nhiều người dùng sử dụng — và những người dùng này sẽ GHI vào blockchain chứ không chỉ đọc — chúng ta cần một cách để người dùng ký các giao dịch bằng khóa riêng của họ.
+
+Lưu ý: Ethereum (và blockchain nói chung) sử dụng cặp khóa công khai / khóa riêng để ký số các giao dịch. Hãy tưởng tượng nó như một mật khẩu cực kỳ an toàn cho chữ ký số. Bằng cách này, nếu tôi thay đổi một số dữ liệu trên blockchain, tôi có thể chứng minh rằng mình là người ký nhờ vào khóa công khai của mình — nhưng vì không ai biết khóa riêng của tôi, không ai có thể giả mạo giao dịch thay tôi.
+
+Mật mã học rất phức tạp, vì vậy trừ khi bạn là chuyên gia bảo mật và thực sự hiểu rõ, thì không nên cố gắng quản lý khóa riêng của người dùng trong giao diện ứng dụng.
+
+May mắn thay, bạn không cần phải làm vậy — đã có các dịch vụ giúp quản lý việc này. Phổ biến nhất là Metamask.
+
+Metamask
+Metamask là một tiện ích mở rộng cho trình duyệt Chrome và Firefox, cho phép người dùng quản lý tài khoản Ethereum và khóa riêng của họ một cách an toàn, và sử dụng các tài khoản này để tương tác với các website sử dụng Web3.js. (Nếu bạn chưa sử dụng nó, hãy cài đặt — sau đó trình duyệt của bạn sẽ hỗ trợ Web3, và bạn có thể tương tác với bất kỳ website nào giao tiếp với blockchain Ethereum!).
+
+Và với tư cách là nhà phát triển, nếu bạn muốn người dùng tương tác với DApp của mình qua một website trong trình duyệt web (như chúng ta đang làm với trò chơi CryptoZombies), bạn chắc chắn sẽ muốn tích hợp với Metamask.
+
+Lưu ý: Metamask sử dụng các máy chủ của Infura dưới nền làm web3 provider, tương tự như cách chúng ta đã làm ở trên — nhưng nó cũng cho phép người dùng tùy chọn nhà cung cấp web3 của riêng họ.
+Vì vậy, bằng cách sử dụng nhà cung cấp web3 của Metamask, bạn đang trao cho người dùng sự lựa chọn, và bạn không cần phải lo lắng về phần này trong ứng dụng của mình.
+
+Sử dụng nhà cung cấp web3 của Metamask
+Metamask chèn nhà cung cấp web3 của họ vào trình duyệt dưới đối tượng JavaScript toàn cục web3. Vì vậy, ứng dụng của bạn có thể kiểm tra xem web3 có tồn tại hay không, và nếu có, sử dụng web3.currentProvider làm provider.
+
+Dưới đây là một số mã mẫu do Metamask cung cấp để chúng ta có thể phát hiện xem người dùng có cài đặt Metamask hay không, và nếu không thì thông báo rằng họ cần cài đặt nó để sử dụng ứng dụng của chúng ta:
+
+js
+window.addEventListener('load', function() {
+
+  // Kiểm tra xem Web3 đã được trình duyệt chèn vào (Mist/MetaMask) chưa
+  if (typeof web3 !== 'undefined') {
+    // Sử dụng provider của Mist/MetaMask
+    web3js = new Web3(web3.currentProvider);
+  } else {
+    // Xử lý trường hợp người dùng không có web3.
+    // Có thể hiển thị một thông báo yêu cầu họ cài đặt Metamask để sử dụng ứng dụng của chúng ta.
+  }
+
+  // Giờ đây bạn có thể khởi động ứng dụng và truy cập web3js tự do:
+  startApp()
+
+});
+Bạn có thể sử dụng mã mẫu này trong tất cả các ứng dụng mà bạn tạo ra để yêu cầu người dùng cài đặt Metamask nếu muốn sử dụng DApp của bạn.
+
+Lưu ý: Cũng có những chương trình quản lý khóa riêng khác mà người dùng của bạn có thể sử dụng bên cạnh Metamask, chẳng hạn như trình duyệt web Mist. 
+Tuy nhiên, tất cả chúng đều triển khai theo một mẫu chung là chèn biến web3, vì vậy phương pháp mà chúng tôi mô tả ở đây để phát hiện nhà cung cấp web3 của người dùng sẽ hoạt động với các chương trình này.
+  --->
+  <!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>CryptoZombies front-end</title>
+    <script language="javascript" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script language="javascript" type="text/javascript" src="web3.min.js"></script>
+  </head>
+  <body>
+
+    <script>
+      // Start here
+      window.addEventListener('load', function() {
+
+  // Checking if Web3 has been injected by the browser (Mist/MetaMask)
+  if (typeof web3 !== 'undefined') {
+    // Use Mist/MetaMask's provider
+    web3js = new Web3(web3.currentProvider);
+  } else {
+    // Handle the case where the user doesn't have web3. Probably
+    // show them a message telling them to install Metamask in
+    // order to use our app.
+  }
+
+  // Now you can start your app & access web3js freely:
+  startApp()
+
+})
+    </script>
+  </body>
+</html>
