@@ -1,0 +1,70 @@
+<!--
+Chương 4: Gọi Các Hàm Trong Hợp Đồng
+Hợp đồng thông minh của chúng ta đã sẵn sàng! Bây giờ, chúng ta có thể sử dụng Web3.js để tương tác với nó.
+
+Web3.js có hai phương thức mà chúng ta sẽ sử dụng để gọi các hàm trong hợp đồng: call và send.
+
+Call
+call được sử dụng cho các hàm có từ khóa view và pure. Nó chỉ chạy trên nút cục bộ và không tạo giao dịch trên blockchain.
+
+Ôn lại: Các hàm view và pure chỉ đọc dữ liệu và không thay đổi trạng thái trên blockchain. Chúng không tốn gas và người dùng cũng không cần phải ký giao dịch qua MetaMask.
+
+Sử dụng Web3.js, bạn có thể gọi một hàm tên là myMethod với tham số 123 như sau:
+
+javascript
+myContract.methods.myMethod(123).call()
+Send
+send sẽ tạo một giao dịch và thay đổi dữ liệu trên blockchain. Bạn sẽ cần sử dụng send cho bất kỳ hàm nào không có từ khóa view hoặc pure.
+
+Lưu ý: Việc gửi một giao dịch sẽ yêu cầu người dùng trả phí gas, và MetaMask sẽ hiện thông báo để yêu cầu người dùng ký giao dịch. Khi sử dụng MetaMask làm nhà cung cấp Web3, tất cả điều này sẽ diễn ra tự động khi chúng ta gọi hàm send(), và không cần làm gì đặc biệt trong mã của mình. Thật tiện lợi!
+
+Sử dụng Web3.js, bạn sẽ gửi một giao dịch gọi hàm myMethod với tham số 123 như sau:
+
+javascript
+myContract.methods.myMethod(123).send()
+Cú pháp gần như giống hệt call().
+
+Lấy Dữ Liệu Zombie
+Bây giờ hãy xem một ví dụ thực tế về việc sử dụng call để truy cập dữ liệu từ hợp đồng của chúng ta.
+
+Nhớ lại rằng chúng ta đã tạo một mảng zombie công khai:
+
+solidity
+Zombie[] public zombies;
+Trong Solidity, khi bạn khai báo một biến là public, nó tự động tạo ra một hàm "getter" công khai có cùng tên. Vì vậy, nếu bạn muốn tìm kiếm zombie có id là 15, bạn sẽ gọi nó như một hàm: zombies(15).
+
+Dưới đây là cách viết một hàm JavaScript trong phần front-end để nhận id của một zombie, truy vấn hợp đồng và trả về kết quả:
+
+Lưu ý: Tất cả các ví dụ mã trong bài học này sử dụng phiên bản 1.0 của Web3.js, phiên bản này sử dụng promise thay vì callback. Nhiều hướng dẫn khác trực tuyến sử dụng phiên bản cũ hơn của Web3.js. Cú pháp đã thay đổi nhiều trong phiên bản 1.0, vì vậy nếu bạn sao chép mã từ các hướng dẫn khác, hãy đảm bảo rằng chúng sử dụng cùng phiên bản với bạn!
+
+javascript
+function getZombieDetails(id) {
+  return cryptoZombies.methods.zombies(id).call();
+}
+
+// Gọi hàm và thực hiện một điều gì đó với kết quả:
+getZombieDetails(15)
+.then(function(result) {
+  console.log("Zombie 15: " + JSON.stringify(result));
+});
+Hãy cùng xem qua những gì đang diễn ra ở đây.
+
+cryptoZombies.methods.zombies(id).call() sẽ giao tiếp với nút Web3 và yêu cầu nó trả về zombie có chỉ mục id từ mảng Zombie[] public zombies trong hợp đồng của chúng ta.
+
+Lưu ý rằng đây là một quá trình không đồng bộ, giống như một cuộc gọi API đến một máy chủ bên ngoài. Vì vậy, Web3 trả về một promise ở đây. (Nếu bạn chưa quen với promise trong JavaScript... Hãy làm thêm bài tập về nhà trước khi tiếp tục!)
+
+Khi promise được giải quyết (nghĩa là chúng ta đã nhận được câu trả lời từ nhà cung cấp Web3), mã ví dụ của chúng ta tiếp tục với câu lệnh then, nơi nó ghi kết quả vào bảng điều khiển (console).
+
+result sẽ là một đối tượng JavaScript trông như thế này:
+
+json
+{
+  "name": "H4XF13LD MORRIS'S COOLER OLDER BROTHER",
+  "dna": "1337133713371337",
+  "level": "9999",
+  "readyTime": "1522498671",
+  "winCount": "999999999",
+  "lossCount": "0" // Tất nhiên rồi.
+}
+Sau đó, chúng ta có thể có logic front-end để phân tích đối tượng này và hiển thị nó theo cách có ý nghĩa trên giao diện người dùng.
+--->
