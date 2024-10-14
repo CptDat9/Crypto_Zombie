@@ -1,0 +1,96 @@
+<!--
+Chương 5: MetaMask & Tài khoản
+Tuyệt vời! Bạn đã thành công viết mã front-end để tương tác với smart contract đầu tiên của mình.
+
+Bây giờ, hãy kết hợp một số phần lại — giả sử chúng ta muốn trang chủ của ứng dụng hiển thị toàn bộ đội quân zombie của người dùng.
+
+Rõ ràng, trước tiên chúng ta cần sử dụng hàm getZombiesByOwner(owner) để tìm tất cả ID của zombie mà người dùng hiện tại sở hữu.
+
+Nhưng hợp đồng Solidity của chúng ta đang mong đợi tham số owner là một địa chỉ Solidity. Làm thế nào chúng ta có thể biết địa chỉ của người dùng đang sử dụng ứng dụng của mình?
+
+Lấy tài khoản người dùng trong MetaMask
+MetaMask cho phép người dùng quản lý nhiều tài khoản trong phần mở rộng của họ.
+
+Chúng ta có thể xem tài khoản nào đang hoạt động trên biến web3 được chèn vào thông qua:
+
+javascript
+var userAccount = web3.eth.accounts[0];
+Vì người dùng có thể thay đổi tài khoản đang hoạt động bất cứ lúc nào trong MetaMask, ứng dụng của chúng ta cần theo dõi biến này để xem liệu nó có thay đổi hay không và cập nhật giao diện người dùng tương ứng.
+Ví dụ, nếu trang chủ của người dùng hiển thị đội quân zombie của họ, khi họ thay đổi tài khoản trong MetaMask, chúng ta sẽ muốn cập nhật trang để hiển thị đội quân zombie của tài khoản mới mà họ đã chọn.
+
+Chúng ta có thể làm điều đó bằng một vòng lặp setInterval như sau:
+
+javascript
+var accountInterval = setInterval(function() {
+  // Kiểm tra nếu tài khoản đã thay đổi
+  if (web3.eth.accounts[0] !== userAccount) {
+    userAccount = web3.eth.accounts[0];
+    // Gọi một số hàm để cập nhật giao diện người dùng với tài khoản mới
+    updateInterface();
+  }
+}, 100);
+Cách hoạt động là mỗi 100 mili giây, hàm kiểm tra xem userAccount có vẫn bằng web3.eth.accounts[0] không (tức là người dùng vẫn đang sử dụng tài khoản đó).
+Nếu không, nó sẽ gán lại userAccount cho tài khoản hiện đang hoạt động và gọi hàm để cập nhật hiển thị.
+--->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>CryptoZombies front-end</title>
+    <script language="javascript" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script language="javascript" type="text/javascript" src="web3.min.js"></script>
+    <script language="javascript" type="text/javascript" src="cryptozombies_abi.js"></script>
+  </head>
+  <body>
+
+    <script>
+      var cryptoZombies;
+      // 1. declare `userAccount` here
+      var userAccount;
+
+      function startApp() {
+        var cryptoZombiesAddress = "YOUR_CONTRACT_ADDRESS";
+        cryptoZombies = new web3js.eth.Contract(cryptoZombiesABI, cryptoZombiesAddress);
+
+        // 2. Create `setInterval` code here
+        var accountInterval = setInterval(function() {
+  // Check if account has changed
+  if (web3.eth.accounts[0] !== userAccount) {
+    userAccount = web3.eth.accounts[0];
+    // Call some function to update the UI with the new account
+    getZombiesByOwner(userAccount)
+    .then(displayZombies);
+  }
+}, 100);
+      }
+
+      function getZombieDetails(id) {
+        return cryptoZombies.methods.zombies(id).call()
+      }
+
+      function zombieToOwner(id) {
+        return cryptoZombies.methods.zombieToOwner(id).call()
+      }
+
+      function getZombiesByOwner(owner) {
+        return cryptoZombies.methods.getZombiesByOwner(owner).call()
+      }
+
+      window.addEventListener('load', function() {
+
+        // Checking if Web3 has been injected by the browser (Mist/MetaMask)
+        if (typeof web3 !== 'undefined') {
+          // Use Mist/MetaMask's provider
+          web3js = new Web3(web3.currentProvider);
+        } else {
+          // Handle the case where the user doesn't have Metamask installed
+          // Probably show them a message prompting them to install Metamask
+        }
+
+        // Now you can start your app & access web3 freely:
+        startApp()
+
+      })
+    </script>
+  </body>
+</html>
