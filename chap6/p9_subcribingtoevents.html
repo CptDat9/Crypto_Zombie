@@ -1,0 +1,194 @@
+<!--
+Chương 9: Đăng ký sự kiện
+
+Như bạn thấy, tương tác với hợp đồng của bạn qua Web3.js khá là đơn giản — một khi bạn đã thiết lập môi trường, việc gọi các hàm và gửi giao dịch không khác nhiều so với API web thông thường.
+
+Có một khía cạnh nữa mà chúng tôi muốn đề cập — đó là đăng ký các sự kiện từ hợp đồng của bạn.
+
+Lắng nghe sự kiện tạo Zombie mới
+
+Nếu bạn nhớ từ tệp zombiefactory.sol, chúng ta có một sự kiện tên là NewZombie mà chúng ta phát mỗi khi một zombie mới được tạo ra:
+
+solidity
+event NewZombie(uint zombieId, string name, uint dna);
+Trong Web3.js, bạn có thể đăng ký một sự kiện để nhà cung cấp web3 của bạn kích hoạt một số logic trong mã của bạn mỗi khi sự kiện đó được phát:
+
+javascript
+cryptoZombies.events.NewZombie()
+.on("data", function(event) {
+  let zombie = event.returnValues;
+  // Chúng ta có thể truy cập 3 giá trị trả về của sự kiện này trên đối tượng `event.returnValues`:
+  console.log("Một zombie mới được tạo ra!", zombie.zombieId, zombie.name, zombie.dna);
+}).on("error", console.error);
+Lưu ý rằng đoạn mã này sẽ kích hoạt một cảnh báo mỗi khi bất kỳ zombie nào được tạo ra trong DApp của chúng ta — không chỉ cho người dùng hiện tại. Vậy nếu chúng ta chỉ muốn cảnh báo cho người dùng hiện tại thì sao?
+
+Sử dụng indexed
+
+Để lọc sự kiện và chỉ lắng nghe các thay đổi liên quan đến người dùng hiện tại, hợp đồng Solidity của chúng ta sẽ phải sử dụng từ khóa indexed, như chúng ta đã làm trong sự kiện Transfer của việc triển khai ERC721:
+
+solidity
+event Transfer(address indexed _from, address indexed _to, uint256 _tokenId);
+Trong trường hợp này, vì _from và _to được đánh dấu indexed, điều đó có nghĩa là chúng ta có thể lọc chúng trong listener sự kiện của chúng ta ở phía front-end:
+
+javascript
+// Sử dụng `filter` để chỉ chạy mã này khi `_to` bằng `userAccount`
+cryptoZombies.events.Transfer({ filter: { _to: userAccount } })
+.on("data", function(event) {
+  let data = event.returnValues;
+  // Người dùng hiện tại vừa nhận được một zombie!
+  // Làm gì đó ở đây để cập nhật giao diện người dùng
+}).on("error", console.error);
+Như bạn thấy, sử dụng sự kiện và các trường indexed có thể là một thực hành rất hữu ích để lắng nghe các thay đổi trong hợp đồng của bạn và phản ánh chúng trên front-end của ứng dụng.
+
+Truy vấn các sự kiện đã xảy ra
+
+Chúng ta thậm chí có thể truy vấn các sự kiện đã xảy ra bằng cách sử dụng getPastEvents, và sử dụng các bộ lọc fromBlock và toBlock để cung cấp cho Solidity một phạm vi thời gian cho các nhật ký sự kiện ("block" trong trường hợp này đề cập đến số block của Ethereum):
+
+javascript
+cryptoZombies.getPastEvents("NewZombie", { fromBlock: 0, toBlock: "latest" })
+.then(function(events) {
+  // `events` là một mảng các đối tượng `event` mà chúng ta có thể lặp qua, như đã làm ở trên
+  // Đoạn mã này sẽ lấy danh sách mọi zombie từng được tạo ra
+});
+Bởi vì bạn có thể sử dụng phương pháp này để truy vấn các nhật ký sự kiện từ khi bắt đầu, điều này mở ra một trường hợp sử dụng thú vị: Sử dụng sự kiện như một hình thức lưu trữ rẻ hơn.
+
+Nếu bạn nhớ, việc lưu dữ liệu lên blockchain là một trong những thao tác tốn kém nhất trong Solidity. Nhưng việc sử dụng sự kiện lại rẻ hơn nhiều về chi phí gas.
+
+Điểm đánh đổi ở đây là các sự kiện không thể đọc được từ bên trong hợp đồng thông minh. Nhưng đó là một trường hợp sử dụng quan trọng cần ghi nhớ nếu bạn có một số dữ liệu mà bạn muốn ghi lại lịch sử trên blockchain để có thể đọc nó từ front-end của ứng dụng.
+
+Ví dụ, chúng ta có thể sử dụng điều này như một hồ sơ lịch sử về các trận chiến zombie — chúng ta có thể tạo ra một sự kiện mỗi khi một zombie tấn công một zombie khác và ghi lại ai thắng. Hợp đồng thông minh không cần dữ liệu này để tính toán kết quả trong tương lai, nhưng đó là dữ liệu hữu ích cho người dùng khi duyệt từ front-end của ứng dụng.
+--->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>CryptoZombies front-end</title>
+    <script language="javascript" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script language="javascript" type="text/javascript" src="web3.min.js"></script>
+    <script language="javascript" type="text/javascript" src="cryptozombies_abi.js"></script>
+  </head>
+  <body>
+    <div id="txStatus"></div>
+    <div id="zombies"></div>
+
+    <script>
+      var cryptoZombies;
+      var userAccount;
+
+      function startApp() {
+        var cryptoZombiesAddress = "YOUR_CONTRACT_ADDRESS";
+        cryptoZombies = new web3js.eth.Contract(cryptoZombiesABI, cryptoZombiesAddress);
+
+        var accountInterval = setInterval(function() {
+          // Check if account has changed
+          if (web3.eth.accounts[0] !== userAccount) {
+            userAccount = web3.eth.accounts[0];
+            // Call a function to update the UI with the new account
+            getZombiesByOwner(userAccount)
+            .then(displayZombies);
+          }
+        }, 100);
+
+        // Start here
+       cryptoZombies.events.Transfer({ filter: { _to: userAccount } })
+        .on("data", function(event) {
+          let data = event.returnValues;
+          getZombiesByOwner(userAccount).then(displayZombies);
+        }).on("error", console.error);
+      }
+
+      function displayZombies(ids) {
+        $("#zombies").empty();
+        for (const id of ids) {
+          // Look up zombie details from our contract. Returns a `zombie` object
+          getZombieDetails(id)
+          .then(function(zombie) {
+            // Using ES6's "template literals" to inject variables into the HTML.
+            // Append each one to our #zombies div
+            $("#zombies").append(`<div class="zombie">
+              <ul>
+                <li>Name: ${zombie.name}</li>
+                <li>DNA: ${zombie.dna}</li>
+                <li>Level: ${zombie.level}</li>
+                <li>Wins: ${zombie.winCount}</li>
+                <li>Losses: ${zombie.lossCount}</li>
+                <li>Ready Time: ${zombie.readyTime}</li>
+              </ul>
+            </div>`);
+          });
+        }
+      }
+
+      function createRandomZombie(name) {
+        // This is going to take a while, so update the UI to let the user know
+        // the transaction has been sent
+        $("#txStatus").text("Creating new zombie on the blockchain. This may take a while...");
+        // Send the tx to our contract:
+        return cryptoZombies.methods.createRandomZombie(name)
+        .send({ from: userAccount })
+        .on("receipt", function(receipt) {
+          $("#txStatus").text("Successfully created " + name + "!");
+          // Transaction was accepted into the blockchain, let's redraw the UI
+          getZombiesByOwner(userAccount).then(displayZombies);
+        })
+        .on("error", function(error) {
+          // Do something to alert the user their transaction has failed
+          $("#txStatus").text(error);
+        });
+      }
+
+      function feedOnKitty(zombieId, kittyId) {
+        $("#txStatus").text("Eating a kitty. This may take a while...");
+        return cryptoZombies.methods.feedOnKitty(zombieId, kittyId)
+        .send({ from: userAccount })
+        .on("receipt", function(receipt) {
+          $("#txStatus").text("Ate a kitty and spawned a new Zombie!");
+          getZombiesByOwner(userAccount).then(displayZombies);
+        })
+        .on("error", function(error) {
+          $("#txStatus").text(error);
+        });
+      }
+
+      function levelUp(zombieId) {
+        $("#txStatus").text("Leveling up your zombie...");
+        return cryptoZombies.methods.levelUp(zombieId)
+        .send({ from: userAccount, value: web3.utils.toWei("0.001", "ether") })
+        .on("receipt", function(receipt) {
+          $("#txStatus").text("Power overwhelming! Zombie successfully leveled up");
+        })
+        .on("error", function(error) {
+          $("#txStatus").text(error);
+        });
+      }
+
+      function getZombieDetails(id) {
+        return cryptoZombies.methods.zombies(id).call()
+      }
+
+      function zombieToOwner(id) {
+        return cryptoZombies.methods.zombieToOwner(id).call()
+      }
+
+      function getZombiesByOwner(owner) {
+        return cryptoZombies.methods.getZombiesByOwner(owner).call()
+      }
+
+      window.addEventListener('load', function() {
+
+        // Checking if Web3 has been injected by the browser (Mist/MetaMask)
+        if (typeof web3 !== 'undefined') {
+          // Use Mist/MetaMask's provider
+          web3js = new Web3(web3.currentProvider);
+        } else {
+          // Handle the case where the user doesn't have Metamask installed
+          // Probably show them a message prompting them to install Metamask
+        }
+
+        // Now you can start your app & access web3 freely:
+        startApp()
+
+      })
+    </script>
+  </body>
+</html>
