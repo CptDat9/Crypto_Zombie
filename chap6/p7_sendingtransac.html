@@ -1,0 +1,182 @@
+<!--
+Chương 7: Gửi giao dịch
+
+Tuyệt vời! Bây giờ giao diện người dùng của chúng ta sẽ phát hiện tài khoản MetaMask của người dùng và tự động hiển thị đội quân zombie của họ trên trang chủ.
+
+Giờ hãy cùng xem xét cách sử dụng các hàm gửi (send functions) để thay đổi dữ liệu trên hợp đồng thông minh của chúng ta.
+
+Có một vài điểm khác biệt lớn so với các hàm gọi (call functions):
+
+Gửi giao dịch yêu cầu một địa chỉ từ (from address) của người gọi hàm (đây là msg.sender trong mã Solidity của bạn). Chúng ta muốn đây là người dùng của DApp, vì vậy MetaMask sẽ hiển thị thông báo yêu cầu họ ký giao dịch.
+
+Gửi giao dịch tốn gas.
+
+Sẽ có một độ trễ đáng kể từ khi người dùng gửi giao dịch đến khi giao dịch thực sự có hiệu lực trên blockchain. Điều này là do chúng ta phải chờ giao dịch được đưa vào một khối, 
+và thời gian tạo khối của Ethereum trung bình là 15 giây. Nếu có nhiều giao dịch chờ xử lý trên Ethereum hoặc nếu người dùng gửi giá gas quá thấp, giao dịch của chúng ta có thể phải chờ vài khối để được đưa vào,
+và điều này có thể mất vài phút.
+
+Vì vậy, chúng ta cần có logic trong ứng dụng để xử lý tính bất đồng bộ của mã này.
+
+Tạo zombies
+Hãy cùng xem xét một ví dụ với hàm đầu tiên mà người dùng mới sẽ gọi trong hợp đồng của chúng ta: createRandomZombie.
+
+Để ôn lại, đây là mã Solidity trong hợp đồng của chúng ta:
+
+solidity
+function createRandomZombie(string _name) public {
+  require(ownerZombieCount[msg.sender] == 0);
+  uint randDna = _generateRandomDna(_name);
+  randDna = randDna - randDna % 100;
+  _createZombie(_name, randDna);
+}
+Dưới đây là một ví dụ về cách chúng ta có thể gọi hàm này trong Web3.js sử dụng MetaMask:
+
+javascript
+function createRandomZombie(name) {
+  // Điều này sẽ mất một chút thời gian, vì vậy hãy cập nhật giao diện người dùng để thông báo cho người dùng rằng
+  // giao dịch đã được gửi đi
+  $("#txStatus").text("Đang tạo zombie mới trên blockchain. Điều này có thể mất một lúc...");
+  
+  // Gửi giao dịch đến hợp đồng của chúng ta:
+  return cryptoZombies.methods.createRandomZombie(name)
+  .send({ from: userAccount })
+  .on("receipt", function(receipt) {
+    $("#txStatus").text("Đã tạo zombie " + name + " thành công!");
+    // Giao dịch đã được chấp nhận vào blockchain, chúng ta sẽ vẽ lại giao diện người dùng
+    getZombiesByOwner(userAccount).then(displayZombies);
+  })
+  .on("error", function(error) {
+    // Làm gì đó để thông báo cho người dùng biết giao dịch của họ đã thất bại
+    $("#txStatus").text(error);
+  });
+}
+Hàm của chúng ta gửi một giao dịch đến nhà cung cấp Web3 và nối các trình nghe sự kiện (event listeners):
+
+receipt sẽ được gọi khi giao dịch được đưa vào một khối trên Ethereum, có nghĩa là zombie của chúng ta đã được tạo ra và lưu vào hợp đồng.
+
+error sẽ được gọi nếu có vấn đề ngăn cản giao dịch được đưa vào một khối, chẳng hạn như người dùng không gửi đủ gas. Chúng ta sẽ muốn thông báo cho người dùng trong giao diện của chúng ta rằng giao dịch không thành công để họ có thể thử lại.
+
+Lưu ý: Bạn có thể tùy chọn chỉ định gas và gasPrice khi gọi send, ví dụ như .send({ from: userAccount, gas: 3000000 }). Nếu bạn không chỉ định, MetaMask sẽ để người dùng tự chọn các giá trị này.
+--->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>CryptoZombies front-end</title>
+    <script language="javascript" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script language="javascript" type="text/javascript" src="web3.min.js"></script>
+    <script language="javascript" type="text/javascript" src="cryptozombies_abi.js"></script>
+  </head>
+  <body>
+    <div id="txStatus"></div>
+    <div id="zombies"></div>
+
+    <script>
+      var cryptoZombies;
+      var userAccount;
+
+      function startApp() {
+        var cryptoZombiesAddress = "YOUR_CONTRACT_ADDRESS";
+        cryptoZombies = new web3js.eth.Contract(cryptoZombiesABI, cryptoZombiesAddress);
+
+        var accountInterval = setInterval(function() {
+          // Check if account has changed
+          if (web3.eth.accounts[0] !== userAccount) {
+            userAccount = web3.eth.accounts[0];
+            // Call a function to update the UI with the new account
+            getZombiesByOwner(userAccount)
+            .then(displayZombies);
+          }
+        }, 100);
+      }
+
+      function displayZombies(ids) {
+        $("#zombies").empty();
+        for (const id of ids) {
+          // Look up zombie details from our contract. Returns a `zombie` object
+          getZombieDetails(id)
+          .then(function(zombie) {
+            // Using ES6's "template literals" to inject variables into the HTML.
+            // Append each one to our #zombies div
+            $("#zombies").append(`<div class="zombie">
+              <ul>
+                <li>Name: ${zombie.name}</li>
+                <li>DNA: ${zombie.dna}</li>
+                <li>Level: ${zombie.level}</li>
+                <li>Wins: ${zombie.winCount}</li>
+                <li>Losses: ${zombie.lossCount}</li>
+                <li>Ready Time: ${zombie.readyTime}</li>
+              </ul>
+            </div>`);
+          });
+        }
+      }
+
+      // Start here
+     function createRandomZombie(name) {
+  // This is going to take a while, so update the UI to let the user know
+  // the transaction has been sent
+  $("#txStatus").text("Creating new zombie on the blockchain. This may take a while...");
+  // Send the tx to our contract:
+  return cryptoZombies.methods.createRandomZombie(name)
+  .send({ from: userAccount })
+  .on("receipt", function(receipt) {
+    $("#txStatus").text("Successfully created " + name + "!");
+    // Transaction was accepted into the blockchain, let's redraw the UI
+    getZombiesByOwner(userAccount).then(displayZombies);
+  })
+  .on("error", function(error) {
+    // Do something to alert the user their transaction has failed
+    $("#txStatus").text(error);
+  });
+}
+function feedOnKitty(zombieId, kittyId) {
+$("#txStatus").text("Eating a kitty. This may take a while...");
+return cryptoZombies.methods.feedOnKitty(zombieId, kittyId)
+.send({ from: userAccount })
+.on("receipt", function(receipt) {
+    $("#txStatus").text("Ate a kitty and spawned a new Zombie!");
+    // Transaction was accepted into the blockchain, let's redraw the UI
+    getZombiesByOwner(userAccount).then(displayZombies);
+  })
+   .on("error", function(error) {
+    // Do something to alert the user their transaction has failed
+    $("#txStatus").text(error);
+  });
+}
+
+      function getZombieDetails(id) {
+        return cryptoZombies.methods.zombies(id).call()
+      }
+
+      function zombieToOwner(id) {
+        return cryptoZombies.methods.zombieToOwner(id).call()
+      }
+
+      function getZombiesByOwner(owner) {
+        return cryptoZombies.methods.getZombiesByOwner(owner).call()
+      }
+
+      window.addEventListener('load', function() {
+
+        // Checking if Web3 has been injected by the browser (Mist/MetaMask)
+        if (typeof web3 !== 'undefined') {
+          // Use Mist/MetaMask's provider
+          web3js = new Web3(web3.currentProvider);
+        } else {
+          // Handle the case where the user doesn't have Metamask installed
+          // Probably show them a message prompting them to install Metamask
+        }
+
+        // Now you can start your app & access web3 freely:
+        startApp()
+
+      })
+    </script>
+  </body>
+</html>
+
+
+
+
+
