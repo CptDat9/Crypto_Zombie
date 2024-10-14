@@ -1,0 +1,145 @@
+<!--
+Chương 6: Hiển thị đội quân Zombie của chúng ta
+
+Hướng dẫn này sẽ không hoàn chỉnh nếu chúng ta không chỉ bạn cách hiển thị dữ liệu mà bạn nhận được từ hợp đồng thông minh.
+
+Tuy nhiên, thực tế thì bạn sẽ muốn sử dụng một framework front-end như React hoặc Vue.js trong ứng dụng của mình, vì chúng sẽ giúp bạn dễ dàng hơn rất nhiều khi phát triển front-end.
+Nhưng việc giới thiệu React hoặc Vue.js là một chủ đề rất rộng và ngoài phạm vi của hướng dẫn này — đó sẽ là một chuỗi các bài học dài.
+
+Vì vậy, để giữ cho CryptoZombies.io tập trung vào Ethereum và smart contracts, chúng tôi sẽ chỉ cho bạn một ví dụ nhanh bằng JQuery để minh họa cách bạn có thể phân tích và hiển thị dữ liệu nhận được từ smart contract.
+
+Hiển thị dữ liệu zombie — một ví dụ sơ bộ
+Chúng ta đã thêm một <div id="zombies"></div> rỗng vào phần body của tài liệu, cùng với một hàm displayZombies rỗng.
+
+Nhớ lại rằng trong chương trước, chúng ta đã gọi hàm displayZombies từ trong startApp() với kết quả của việc gọi getZombiesByOwner. Nó sẽ nhận một mảng các ID zombie, giống như:
+
+javascript
+[0, 13, 47]
+Vì vậy, chúng ta muốn hàm displayZombies sẽ:
+
+Đầu tiên, xóa nội dung của <div id="zombies">, nếu có gì đó đã có trong đó. (Cách này sẽ giúp nếu người dùng thay đổi tài khoản MetaMask của họ, nó sẽ xóa đội quân zombie cũ trước khi tải đội quân mới).
+
+Lặp qua từng ID, và với mỗi ID, gọi getZombieDetails(id) để tra cứu tất cả thông tin về zombie đó từ smart contract, sau đó:
+
+Đưa thông tin về zombie vào một template HTML để định dạng và hiển thị, rồi thêm template đó vào <div id="zombies">.
+
+Lần nữa, chúng ta chỉ sử dụng JQuery ở đây, nó không có engine tạo template mặc định, vì vậy nó sẽ trông khá xấu. Nhưng dưới đây là một ví dụ đơn giản về cách chúng ta có thể xuất dữ liệu cho từng zombie:
+
+javascript
+// Tra cứu chi tiết zombie từ hợp đồng. Trả về một đối tượng `zombie`
+getZombieDetails(id)
+.then(function(zombie) {
+  // Sử dụng "template literals" của ES6 để chèn các biến vào HTML.
+  // Thêm từng phần vào div #zombies
+  $("#zombies").append(`<div class="zombie">
+    <ul>
+      <li>Tên: ${zombie.name}</li>
+      <li>DNA: ${zombie.dna}</li>
+      <li>Cấp độ: ${zombie.level}</li>
+      <li>Chiến thắng: ${zombie.winCount}</li>
+      <li>Thua: ${zombie.lossCount}</li>
+      <li>Thời gian sẵn sàng: ${zombie.readyTime}</li>
+    </ul>
+  </div>`);
+});
+Hiển thị các sprite của zombie như thế nào?
+Trong ví dụ trên, chúng ta chỉ hiển thị DNA như một chuỗi. Nhưng trong DApp của bạn, bạn sẽ muốn chuyển đổi nó thành hình ảnh để hiển thị zombie của bạn.
+
+Chúng tôi đã làm điều này bằng cách chia chuỗi DNA thành các đoạn con, và mỗi 2 chữ số tương ứng với một hình ảnh. Ví dụ như:
+
+javascript
+// Lấy một số nguyên từ 1 đến 7 đại diện cho đầu zombie của chúng ta:
+var head = parseInt(zombie.dna.substring(0, 2)) % 7 + 1
+
+// Chúng ta có 7 hình ảnh đầu với các tên tệp theo thứ tự:
+var headSrc = "../assets/zombieparts/head-" + head + ".png"
+Mỗi thành phần được định vị bằng CSS sử dụng vị trí tuyệt đối, để phủ lên các hình ảnh khác.
+
+Nếu bạn muốn xem cách chúng tôi thực hiện chính xác, chúng tôi đã mở mã nguồn thành phần Vue.js mà chúng tôi sử dụng để hiển thị diện mạo của zombie, bạn có thể xem tại đây.
+
+Tuy nhiên, vì có quá nhiều mã trong tệp đó, nên nó nằm ngoài phạm vi của hướng dẫn này. Đối với bài học này, chúng ta sẽ dính vào ví dụ cực kỳ đơn giản với JQuery ở trên,
+và để lại cho bạn khám phá một triển khai đẹp hơn như bài tập về nhà 
+--->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>CryptoZombies front-end</title>
+    <script language="javascript" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script language="javascript" type="text/javascript" src="web3.min.js"></script>
+    <script language="javascript" type="text/javascript" src="cryptozombies_abi.js"></script>
+  </head>
+  <body>
+    <div id="zombies"></div>
+
+    <script>
+      var cryptoZombies;
+      var userAccount;
+
+      function startApp() {
+        var cryptoZombiesAddress = "YOUR_CONTRACT_ADDRESS";
+        cryptoZombies = new web3js.eth.Contract(cryptoZombiesABI, cryptoZombiesAddress);
+
+        var accountInterval = setInterval(function() {
+          // Check if account has changed
+          if (web3.eth.accounts[0] !== userAccount) {
+            userAccount = web3.eth.accounts[0];
+            // Call a function to update the UI with the new account
+            getZombiesByOwner(userAccount)
+            .then(displayZombies);
+          }
+        }, 100);
+      }
+
+      function displayZombies(ids) {
+        // Start here
+        $("#zombies").empty();
+        for(const id of ids)
+        {
+          getZombieDetails(id)
+.then(function(zombie) {
+  // Using ES6's "template literals" to inject variables into the HTML.
+  // Append each one to our #zombies div
+  $("#zombies").append(`<div class="zombie">
+    <ul>
+      <li>Name: ${zombie.name}</li>
+      <li>DNA: ${zombie.dna}</li>
+      <li>Level: ${zombie.level}</li>
+      <li>Wins: ${zombie.winCount}</li>
+      <li>Losses: ${zombie.lossCount}</li>
+      <li>Ready Time: ${zombie.readyTime}</li>
+    </ul>
+  </div>`);
+});
+        }
+      }
+      function getZombieDetails(id) {
+        return cryptoZombies.methods.zombies(id).call()
+      }
+
+      function zombieToOwner(id) {
+        return cryptoZombies.methods.zombieToOwner(id).call()
+      }
+
+      function getZombiesByOwner(owner) {
+        return cryptoZombies.methods.getZombiesByOwner(owner).call()
+      }
+
+      window.addEventListener('load', function() {
+
+        // Checking if Web3 has been injected by the browser (Mist/MetaMask)
+        if (typeof web3 !== 'undefined') {
+          // Use Mist/MetaMask's provider
+          web3js = new Web3(web3.currentProvider);
+        } else {
+          // Handle the case where the user doesn't have Metamask installed
+          // Probably show them a message prompting them to install Metamask
+        }
+
+        // Now you can start your app & access web3 freely:
+        startApp()
+
+      })
+    </script>
+  </body>
+</html>
