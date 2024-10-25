@@ -25,7 +25,6 @@ Gọi hàm:
 Bạn có thể gọi hàm eatHamburgers như sau:
 
 solidity
-Sao chép mã
 eatHamburgers("vitalik", 100);
 Trong ví dụ này, chuỗi "vitalik" được truyền vào tham số _name, và số 100 vào tham số _amount.
 */
