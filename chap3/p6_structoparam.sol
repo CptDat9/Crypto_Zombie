@@ -1,4 +1,4 @@
-/
+/*
 Chương 6: Thời gian chờ hồi phục của Zombie
 Bây giờ khi chúng ta đã có thuộc tính readyTime trong struct Zombie, hãy chuyển sang tập tin zombiefeeding.sol và triển khai bộ đếm thời gian hồi phục.
 
